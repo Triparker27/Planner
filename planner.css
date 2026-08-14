@@ -1,0 +1,124 @@
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#f4f4f4;
+}
+
+header{
+    background:#4169e1;
+    color:black;
+    text-align:center;
+    padding:30px;
+}
+
+.nav{
+    display:flex;
+    background:#3156d9;
+}
+
+.nav button{
+    flex:1;
+    border:none;
+    background:#3156d9;
+    color:white;
+    padding:20px;
+    cursor:pointer;
+    font-size:18px;
+}
+
+.tab{
+    display:none;
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+.color-preview{
+    width:100%;
+    height:40px;
+    border-radius:5px;
+    border:1px solid #ccc;
+    margin-bottom:10px;
+}
+
+.days-container{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+#classList,
+#assignmentList,
+#quizList{
+    background:#000;
+    color:white;
+    padding:15px;
+    border-radius:10px;
+}
+
+.deleteBtn{
+    background:#ff4444;
+    color:white;
+    border:none;
+    padding:5px 10px;
+    border-radius:5px;
+}
+
+/* CALENDAR */
+
+.calendar-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:white;
+}
+
+.calendar-header h2{
+    color:white;
+}
+
+.weekdays{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    text-align:center;
+    background:#000;
+    color:white;
+    padding:10px 0;
+}
+
+.calendar-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:5px;
+}
+
+.calendar-day{
+    background:#000;
+    color:white;
+    min-height:140px;
+    padding:5px;
+    border-radius:5px;
+    border:1px solid #333;
+}
+
+.event{
+    background:black;
+    color:white;
+    padding:4px;
+    margin-top:4px;
+    border-radius:4px;
+    font-size:12px;
+    display:flex;
+    gap:5px;
+    align-items:center;
+}
+
+.day-number{
+    font-weight:bold;
+    font-size:16px;
+}
