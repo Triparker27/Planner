@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Student Planner</title>
+    <link rel="stylesheet" href="planner.css">
+</head>
+
+<body>
+
+<header>
+    <h1>Student Planner</h1>
+</header>
+
+<div class="nav">
+    <button onclick="showTab('assignments')">Assignments</button>
+    <button onclick="showTab('classes')">Classes</button>
+    <button onclick="showTab('tests')">Tests & Quizzes</button>
+    <button onclick="showTab('calendar')">Calendar</button>
+</div>
+
+<!-- ASSIGNMENTS TAB -->
+<div id="assignments" class="tab">
+
+    <div class="card">
+        <h2>Add Assignment</h2>
+
+        <input id="assignmentName" type="text" placeholder="Assignment Name">
+
+        <select id="assignmentClass">
+            <option value="">Select Class</option>
+        </select>
+
+        <input id="assignmentDue" type="date">
+
+        <textarea id="assignmentNotes" placeholder="Assignment Notes"></textarea>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="addBtn" onclick="addAssignment()">Add Assignment</button>
+
+            <button class="smallBtn" onclick="exportData()">Export Data</button>
+            <button class="smallBtn" onclick="triggerImport()">Import Data</button>
+
+            <input id="importFile" type="file" accept="application/json" style="display:none">
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Assignment List</h2>
+        <div id="assignmentList">No assignments yet.</div>
+    </div>
+
+</div>
+
+<!-- CLASSES TAB -->
+<div id="classes" class="tab">
+
+    <div class="card">
+        <h2>Add Class</h2>
+
+        <input id="className" type="text" placeholder="Class Name">
+
+        <select id="classColor" onchange="updateColorPreview()">
+            <option value="#000000">Black</option>
+            <option value="#1E90FF">Blue</option>
+            <option value="#FF4500">Red</option>
+            <option value="#FFD700">Gold</option>
+            <option value="#00FF00">Green</option>
+        </select>
+
+        <div id="colorPreview" class="color-preview"></div>
+
+        <label><b>Class Day 1:</b></label>
+        <select id="classDay1">
+            <option value="">Select Day</option>
+            <option value="Mon">Monday</option>
+            <option value="Tue">Tuesday</option>
+            <option value="Wed">Wednesday</option>
+            <option value="Thu">Thursday</option>
+            <option value="Fri">Friday</option>
+        </select>
+
+        <label><b>Class Day 2:</b></label>
+        <select id="classDay2">
+            <option value="">None</option>
+            <option value="Mon">Monday</option>
+            <option value="Tue">Tuesday</option>
+            <option value="Wed">Wednesday</option>
+            <option value="Thu">Thursday</option>
+            <option value="Fri">Friday</option>
+        </select>
+
+        <label><b>Start Time:</b></label>
+        <input id="classStart" type="time">
+
+        <label><b>End Time:</b></label>
+        <input id="classEnd" type="time">
+
+        <button class="addBtn" onclick="addClass()">Add Class</button>
+    </div>
+
+    <div class="card">
+        <h2>Class List</h2>
+        <div id="classList">No classes added yet.</div>
+    </div>
+
+</div>
+
+<!-- TESTS & QUIZZES TAB -->
+<div id="tests" class="tab">
+
+    <div class="card">
+        <h2>Add Test / Quiz</h2>
+
+        <input id="quizName" type="text" placeholder="Quiz/Test Name">
+
+        <select id="quizClass">
+            <option value="">Select Class</option>
+        </select>
+
+        <input id="quizDate" type="date">
+
+        <textarea id="quizNotes" placeholder="Notes"></textarea>
+
+        <button class="addBtn" onclick="addQuiz()">Add Quiz/Test</button>
+    </div>
+
+    <div class="card">
+        <h2>Quiz/Test List</h2>
+        <div id="quizList">No quizzes or tests yet.</div>
+    </div>
+
+</div>
+
+<!-- CALENDAR TAB -->
+<div id="calendar" class="tab">
+
+    <div class="card">
+
+        <div class="calendar-header">
+            <button class="cal-btn" onclick="prevMonth()">◀</button>
+            <h2 id="monthLabel"></h2>
+            <button class="cal-btn" onclick="nextMonth()">▶</button>
+        </div>
+
+        <div class="weekdays">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
+
+        <div id="calendarGrid" class="calendar-grid"></div>
+
+    </div>
+
+</div>
+
+<!-- Reference the planner.js file (deferred to ensure DOM is ready) -->
+<script src="planner.js" defer></script>
+
+</body>
+</html>
