@@ -1,7 +1,7 @@
-/* FULL UPDATED planner.js
-   - Calendar shows class, assignment, quiz icons
-   - Modal shows ALL events for that day with full details
-   - Import / Export system added
+/* planner.js (fixed + upgraded)
+   - Calendar shows icons for classes, assignments, quizzes
+   - Day modal shows full details for all events on that date
+   - Import / Export JSON for classes, assignments, quizzes
 */
 
 let currentYear = new Date().getFullYear();
@@ -49,12 +49,12 @@ window.addClass = addClass;
 
 function createClassEntry(name, color, days, start, end){
   const list = $("classList");
+  if(!list) return;
   if(list.innerHTML.trim() === "No classes added yet.") list.innerHTML = "";
 
   let finalName = name;
   const existing = Array.from(document.querySelectorAll("#classList .class-preview"))
     .map(n => n.getAttribute("data-class"));
-
   if(existing.includes(finalName)){
     let i = 2;
     while(existing.includes(`${name} (${i})`)) i++;
@@ -89,6 +89,7 @@ function createClassEntry(name, color, days, start, end){
 function addClassToDropdowns(name, color){
   ["assignmentClass","quizClass"].forEach(id=>{
     const sel = $(id);
+    if(!sel) return;
     const opt = document.createElement("option");
     opt.value = name;
     opt.text = name;
@@ -104,23 +105,24 @@ function deleteClass(name){
 
   ["assignmentClass","quizClass"].forEach(id=>{
     const sel = $(id);
+    if(!sel) return;
     for(let i = sel.options.length - 1; i >= 0; i--){
       if(sel.options[i].value === name) sel.remove(i);
     }
   });
 
   const list = $("classList");
-  if(list.children.length === 0) list.innerHTML = "No classes added yet.";
+  if(list && list.children.length === 0) list.innerHTML = "No classes added yet.";
   renderCalendar();
 }
 window.deleteClass = deleteClass;
 
 function clearClassForm(){
-  $("className").value = "";
-  $("classStart").value = "";
-  $("classEnd").value = "";
-  $("classDay1").selectedIndex = 0;
-  $("classDay2").selectedIndex = 0;
+  if($("className")) $("className").value = "";
+  if($("classStart")) $("classStart").value = "";
+  if($("classEnd")) $("classEnd").value = "";
+  if($("classDay1")) $("classDay1").selectedIndex = 0;
+  if($("classDay2")) $("classDay2").selectedIndex = 0;
   updateColorPreview();
 }
 
@@ -129,13 +131,13 @@ function addAssignment(){
   const name = $("assignmentName").value.trim();
   const cls = $("assignmentClass").value;
   const due = $("assignmentDue").value;
-  const time = $("assignmentTime").value;
-  const notes = $("assignmentNotes").value.trim();
+  const time = $("assignmentTime") ? $("assignmentTime").value : "";
+  const notes = $("assignmentNotes") ? $("assignmentNotes").value.trim() : "";
 
   if(!name){ alert("Enter assignment name."); return; }
 
   const list = $("assignmentList");
-  if(list.innerHTML.trim() === "No assignments yet.") list.innerHTML = "";
+  if(list && list.innerHTML.trim() === "No assignments yet.") list.innerHTML = "";
 
   const div = document.createElement("div");
   div.className = "assignment-preview";
@@ -155,14 +157,14 @@ function addAssignment(){
   list.appendChild(div);
 
   $("assignmentName").value = "";
-  $("assignmentClass").selectedIndex = 0;
-  $("assignmentDue").value = "";
-  $("assignmentTime").value = "";
-  $("assignmentNotes").value = "";
+  if($("assignmentClass")) $("assignmentClass").selectedIndex = 0;
+  if($("assignmentDue")) $("assignmentDue").value = "";
+  if($("assignmentTime")) $("assignmentTime").value = "";
+  if($("assignmentNotes")) $("assignmentNotes").value = "";
 }
 window.addAssignment = addAssignment;
 
-/* QUIZZES */
+/* QUIZZES / TESTS */
 function addQuiz(){
   const name = $("quizName").value.trim();
   const cls = $("quizClass").value;
@@ -176,10 +178,10 @@ function addQuiz(){
   createQuizEntry(name, cls, date, time, notes);
 
   $("quizName").value = "";
-  $("quizClass").selectedIndex = 0;
-  $("quizDate").value = "";
-  $("quizTime").value = "";
-  $("quizNotes").value = "";
+  if($("quizClass")) $("quizClass").selectedIndex = 0;
+  if($("quizDate")) $("quizDate").value = "";
+  if($("quizTime")) $("quizTime").value = "";
+  if($("quizNotes")) $("quizNotes").value = "";
 
   renderCalendar();
 }
@@ -187,12 +189,12 @@ window.addQuiz = addQuiz;
 
 function createQuizEntry(name, cls, date, time, notes){
   const list = $("quizList");
+  if(!list) return;
   if(list.innerHTML.trim() === "No quizzes or tests yet.") list.innerHTML = "";
 
   let finalName = name;
   const existing = Array.from(document.querySelectorAll("#quizList .quiz-preview"))
     .map(n => n.getAttribute("data-quiz"));
-
   if(existing.includes(finalName)){
     let i = 2;
     while(existing.includes(`${name} (${i})`)) i++;
@@ -221,11 +223,12 @@ window.createQuizEntry = createQuizEntry;
 /* CALENDAR RENDERING */
 function renderCalendar(){
   const grid = $("calendarGrid");
+  if(!grid) return;
   grid.innerHTML = "";
 
   const monthLabel = $("monthLabel");
   const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+  if(monthLabel) monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -250,24 +253,28 @@ function renderCalendar(){
     const weekday = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dateObj.getDay()];
     const isoDate = isoDateFromParts(currentYear, currentMonth, day);
 
-    /* CLASS ICONS */
+    // classes for this weekday (exclude Online)
     const classes = getClassesForWeekday(weekday);
-    classes.slice(0,2).forEach(c => {
-      const icon = document.createElement("div");
-      icon.className = "class-icon";
-      icon.textContent = "📘";
-      cell.appendChild(icon);
-    });
-    if(classes.length > 2){
-      const more = document.createElement("div");
-      more.className = "class-icon";
-      more.textContent = `+${classes.length - 2}`;
-      cell.appendChild(more);
+
+    if(classes.length > 0){
+      classes.slice(0,2).forEach(c => {
+        const icon = document.createElement("div");
+        icon.className = "class-icon";
+        icon.textContent = "📘";
+        cell.appendChild(icon);
+      });
+      if(classes.length > 2){
+        const more = document.createElement("div");
+        more.className = "class-icon";
+        more.textContent = `+${classes.length - 2}`;
+        cell.appendChild(more);
+      }
     }
 
-    /* QUIZ ICONS */
+    // quizzes on this date
     Array.from(document.querySelectorAll("#quizList .quiz-preview")).forEach(q => {
-      if(q.getAttribute("data-date") === isoDate){
+      const qDate = q.getAttribute("data-date") || "";
+      if(qDate === isoDate){
         const icon = document.createElement("div");
         icon.className = "class-icon";
         icon.textContent = "⚠️";
@@ -275,9 +282,10 @@ function renderCalendar(){
       }
     });
 
-    /* ASSIGNMENT ICONS */
+    // assignments on this date
     Array.from(document.querySelectorAll("#assignmentList .assignment-preview")).forEach(a => {
-      if(a.getAttribute("data-date") === isoDate){
+      const aDate = a.getAttribute("data-date") || "";
+      if(aDate === isoDate){
         const icon = document.createElement("div");
         icon.className = "class-icon";
         icon.textContent = "📄";
@@ -291,29 +299,28 @@ function renderCalendar(){
 }
 
 function getClassesForWeekday(weekday){
-  return Array.from(document.querySelectorAll("#classList .class-preview"))
-    .map(n => ({
-      name: n.getAttribute("data-class"),
-      days: JSON.parse(n.getAttribute("data-days") || "[]"),
-      start: n.getAttribute("data-start"),
-      end: n.getAttribute("data-end"),
-      color: n.getAttribute("data-color")
-    }))
-    .filter(c => c.days.includes(weekday) && !c.days.includes("Online"));
+  return Array.from(document.querySelectorAll("#classList .class-preview")).map(n => ({
+    name: n.getAttribute("data-class"),
+    days: JSON.parse(n.getAttribute("data-days") || "[]"),
+    start: n.getAttribute("data-start"),
+    end: n.getAttribute("data-end"),
+    color: n.getAttribute("data-color")
+  })).filter(c => c.days.includes(weekday) && !c.days.includes("Online"));
 }
 
-/* MODAL */
+/* DAY MODAL: classes + assignments + quizzes for that date */
 function openDayModal(year, monthIndex, day, weekday){
   const modal = $("dayModal");
   const body = $("modalBody");
   const title = $("modalTitle");
+  if(!modal || !body || !title) return;
 
   const isoDate = isoDateFromParts(year, monthIndex, day);
 
   title.textContent = `Events for ${weekday} ${monthIndex+1}/${day}/${year}`;
   body.innerHTML = "";
 
-  /* CLASSES */
+  // classes (by weekday)
   const classes = getClassesForWeekday(weekday);
   classes.forEach(c => {
     const item = document.createElement("div");
@@ -328,16 +335,16 @@ function openDayModal(year, monthIndex, day, weekday){
     body.appendChild(item);
   });
 
-  /* ASSIGNMENTS */
+  // assignments (by exact date)
   Array.from(document.querySelectorAll("#assignmentList .assignment-preview")).forEach(a => {
-    if(a.getAttribute("data-date") === isoDate){
+    if((a.getAttribute("data-date") || "") === isoDate){
       const item = document.createElement("div");
       item.className = "modal-item assignment";
       item.innerHTML = `
         <div class="sw">📄</div>
         <div class="info">
-          <div><strong>${escapeHtml(a.getAttribute("data-name"))}</strong></div>
-          <div class="time">${escapeHtml(a.getAttribute("data-class"))}</div>
+          <div><strong>${escapeHtml(a.getAttribute("data-name") || "")}</strong></div>
+          <div class="time">${escapeHtml(a.getAttribute("data-class") || "")}</div>
           <div class="time">${escapeHtml(a.getAttribute("data-time") || "")}</div>
           <div class="time">${escapeHtml(a.getAttribute("data-notes") || "")}</div>
         </div>
@@ -346,16 +353,16 @@ function openDayModal(year, monthIndex, day, weekday){
     }
   });
 
-  /* QUIZZES */
+  // quizzes (by exact date)
   Array.from(document.querySelectorAll("#quizList .quiz-preview")).forEach(q => {
-    if(q.getAttribute("data-date") === isoDate){
+    if((q.getAttribute("data-date") || "") === isoDate){
       const item = document.createElement("div");
       item.className = "modal-item quiz";
       item.innerHTML = `
         <div class="sw">⚠️</div>
         <div class="info">
-          <div><strong>${escapeHtml(q.getAttribute("data-quiz"))}</strong></div>
-          <div class="time">${escapeHtml(q.getAttribute("data-class"))}</div>
+          <div><strong>${escapeHtml(q.getAttribute("data-quiz") || "")}</strong></div>
+          <div class="time">${escapeHtml(q.getAttribute("data-class") || "")}</div>
           <div class="time">${escapeHtml(q.getAttribute("data-time") || "")}</div>
           <div class="time">${escapeHtml(q.getAttribute("data-notes") || "")}</div>
         </div>
@@ -365,7 +372,7 @@ function openDayModal(year, monthIndex, day, weekday){
   });
 
   if(body.innerHTML.trim() === ""){
-    body.innerHTML = `<div class="modal-item">No events for this day.</div>`;
+    body.innerHTML = '<div class="modal-item">No events for this day.</div>';
   }
 
   modal.setAttribute("aria-hidden","false");
@@ -373,7 +380,8 @@ function openDayModal(year, monthIndex, day, weekday){
 window.openDayModal = openDayModal;
 
 function closeDayModal(){
-  $("dayModal").setAttribute("aria-hidden","true");
+  const modal = $("dayModal");
+  if(modal) modal.setAttribute("aria-hidden","true");
 }
 window.closeDayModal = closeDayModal;
 
@@ -396,7 +404,7 @@ window.nextMonth = nextMonth;
 function exportData(){
   const classes = Array.from(document.querySelectorAll("#classList .class-preview")).map(n => ({
     name: n.getAttribute("data-class"),
-    days: JSON.parse(n.getAttribute("data-days")),
+    days: JSON.parse(n.getAttribute("data-days") || "[]"),
     start: n.getAttribute("data-start"),
     end: n.getAttribute("data-end"),
     color: n.getAttribute("data-color")
@@ -425,14 +433,17 @@ function exportData(){
   const a = document.createElement("a");
   a.href = url;
   a.download = "student-planner-data.json";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 
   URL.revokeObjectURL(url);
 }
 window.exportData = exportData;
 
 function importData(){
-  $("importFile").click();
+  const input = $("importFile");
+  if(input) input.click();
 }
 window.importData = importData;
 
@@ -454,45 +465,89 @@ function handleImportFile(event){
 window.handleImportFile = handleImportFile;
 
 function loadImportedData(data){
-  /* CLEAR EXISTING */
-  $("classList").innerHTML = "No classes added yet.";
-  $("assignmentList").innerHTML = "No assignments yet.";
-  $("quizList").innerHTML = "No quizzes or tests yet.";
+  // reset lists
+  if($("classList")) $("classList").innerHTML = "No classes added yet.";
+  if($("assignmentList")) $("assignmentList").innerHTML = "No assignments yet.";
+  if($("quizList")) $("quizList").innerHTML = "No quizzes or tests yet.";
 
+  // reset dropdowns
   ["assignmentClass","quizClass"].forEach(id=>{
     const sel = $(id);
+    if(!sel) return;
     while(sel.options.length > 1) sel.remove(1);
   });
 
-  /* LOAD CLASSES */
+  // classes
   if(Array.isArray(data.classes)){
     data.classes.forEach(c => {
-      createClassEntry(c.name, c.color, c.days, c.start, c.end);
+      createClassEntry(c.name, c.color, c.days || [], c.start || "", c.end || "");
     });
   }
 
-  /* LOAD ASSIGNMENTS */
+  // assignments
   if(Array.isArray(data.assignments)){
+    const list = $("assignmentList");
+    if(list && list.innerHTML.trim() === "No assignments yet.") list.innerHTML = "";
     data.assignments.forEach(a => {
       const div = document.createElement("div");
       div.className = "assignment-preview";
-      div.setAttribute("data-name", a.name);
-      div.setAttribute("data-class", a.class);
-      div.setAttribute("data-date", a.date);
-      div.setAttribute("data-time", a.time);
-      div.setAttribute("data-notes", a.notes);
+      div.setAttribute("data-name", a.name || "");
+      div.setAttribute("data-class", a.class || "");
+      div.setAttribute("data-date", a.date || "");
+      div.setAttribute("data-time", a.time || "");
+      div.setAttribute("data-notes", a.notes || "");
 
       div.innerHTML = `
         <div>
-          <div><strong>${escapeHtml(a.name)}</strong></div>
-          <div class="class-meta">${escapeHtml(a.class)} • ${escapeHtml(a.date)} ${a.time ? '• ' + escapeHtml(a.time) : ''}</div>
-          <div class="class-meta">${escapeHtml(a.notes)}</div>
+          <div><strong>${escapeHtml(a.name || "")}</strong></div>
+          <div class="class-meta">${escapeHtml(a.class || "")} • ${escapeHtml(a.date || "")} ${a.time ? '• ' + escapeHtml(a.time) : ''}</div>
+          <div class="class-meta">${escapeHtml(a.notes || "")}</div>
         </div>
       `;
-      $("assignmentList").appendChild(div);
+      list.appendChild(div);
     });
   }
 
-  /* LOAD QUIZZES */
+  // quizzes
   if(Array.isArray(data.quizzes)){
-    data.quizzes.forEach(q =>
+    const list = $("quizList");
+    if(list && list.innerHTML.trim() === "No quizzes or tests yet.") list.innerHTML = "";
+    data.quizzes.forEach(q => {
+      createQuizEntry(q.name || "", q.class || "", q.date || "", q.time || "", q.notes || "");
+    });
+  }
+
+  renderCalendar();
+}
+
+/* HELPERS */
+function isoDateFromParts(year, monthIndex, day){
+  return `${year}-${String(monthIndex+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+function escapeHtml(s){
+  if(s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function escapeJs(s){
+  if(s === null || s === undefined) return '';
+  return String(s).replace(/'/g,"\\'").replace(/"/g,'\\"');
+}
+
+/* INIT */
+document.addEventListener("DOMContentLoaded", () => {
+  if($("classList") && $("classList").innerHTML.trim() === "") $("classList").innerHTML = "No classes added yet.";
+  if($("assignmentList") && $("assignmentList").innerHTML.trim() === "") $("assignmentList").innerHTML = "No assignments yet.";
+  if($("quizList") && $("quizList").innerHTML.trim() === "") $("quizList").innerHTML = "No quizzes or tests yet.";
+
+  const modal = $("dayModal");
+  if(modal) modal.addEventListener("click", (e) => { if(e.target === modal) closeDayModal(); });
+
+  updateColorPreview();
+  renderCalendar();
+  showTab("assignments");
+});
