@@ -224,6 +224,7 @@ function createQuizEntry(name, cls, date, time, notes){
   `;
   list.appendChild(div);
 }
+window.createQuizEntry = createQuizEntry;
 
 /* CALENDAR RENDERING */
 function renderCalendar(){
@@ -313,7 +314,7 @@ function getClassesForWeekday(weekday){
   })).filter(c => c.days.includes(weekday) && !c.days.includes("Online"));
 }
 
-/* DAY MODAL */
+/* DAY MODAL: classes + assignments + quizzes for that date */
 function openDayModal(year, monthIndex, day, weekday){
   const modal = $("dayModal");
   const body = $("modalBody");
@@ -325,7 +326,7 @@ function openDayModal(year, monthIndex, day, weekday){
   title.textContent = `Events for ${weekday} ${monthIndex+1}/${day}/${year}`;
   body.innerHTML = "";
 
-  // classes
+  // classes (by weekday)
   const classes = getClassesForWeekday(weekday);
   classes.forEach(c => {
     const item = document.createElement("div");
@@ -340,7 +341,7 @@ function openDayModal(year, monthIndex, day, weekday){
     body.appendChild(item);
   });
 
-  // assignments
+  // assignments (by exact date)
   Array.from(document.querySelectorAll("#assignmentList .assignment-preview")).forEach(a => {
     if((a.getAttribute("data-date") || "") === isoDate){
       const item = document.createElement("div");
@@ -358,7 +359,7 @@ function openDayModal(year, monthIndex, day, weekday){
     }
   });
 
-  // quizzes
+  // quizzes (by exact date)
   Array.from(document.querySelectorAll("#quizList .quiz-preview")).forEach(q => {
     if((q.getAttribute("data-date") || "") === isoDate){
       const item = document.createElement("div");
@@ -481,3 +482,120 @@ function loadImportedData(data){
     while(sel.options.length > 1) sel.remove(1);
   });
 
+  if(Array.isArray(data.classes)){
+    data.classes.forEach(c => {
+      createClassEntry(c.name || "", c.color || "#000000", c.days || [], c.start || "", c.end || "");
+    });
+  }
+
+  if(Array.isArray(data.assignments)){
+    const list = $("assignmentList");
+    if(list && list.innerHTML.trim() === "No assignments yet.") list.innerHTML = "";
+    data.assignments.forEach(a => {
+      const div = document.createElement("div");
+      div.className = "assignment-preview";
+      div.setAttribute("data-name", a.name || "");
+      div.setAttribute("data-class", a.class || "");
+      div.setAttribute("data-date", a.date || "");
+      div.setAttribute("data-time", a.time || "");
+      div.setAttribute("data-notes", a.notes || "");
+
+      div.innerHTML = `
+        <div>
+          <div><strong>${escapeHtml(a.name || "")}</strong></div>
+          <div class="class-meta">${escapeHtml(a.class || "")} • ${escapeHtml(a.date || "")} ${a.time ? '• ' + escapeHtml(a.time) : ''}</div>
+          <div class="class-meta">${escapeHtml(a.notes || "")}</div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  if(Array.isArray(data.quizzes)){
+    const list = $("quizList");
+    if(list && list.innerHTML.trim() === "No quizzes or tests yet.") list.innerHTML = "";
+    data.quizzes.forEach(q => {
+      createQuizEntry(q.name || "", q.class || "", q.date || "", q.time || "", q.notes || "");
+    });
+  }
+
+  renderCalendar();
+}
+
+/* LOCALSTORAGE HELPERS */
+function saveToLocalStorage(){
+  const classes = Array.from(document.querySelectorAll("#classList .class-preview")).map(n => ({
+    name: n.getAttribute("data-class"),
+    days: JSON.parse(n.getAttribute("data-days") || "[]"),
+    start: n.getAttribute("data-start"),
+    end: n.getAttribute("data-end"),
+    color: n.getAttribute("data-color")
+  }));
+
+  const assignments = Array.from(document.querySelectorAll("#assignmentList .assignment-preview")).map(n => ({
+    name: n.getAttribute("data-name"),
+    class: n.getAttribute("data-class"),
+    date: n.getAttribute("data-date"),
+    time: n.getAttribute("data-time"),
+    notes: n.getAttribute("data-notes")
+  }));
+
+  const quizzes = Array.from(document.querySelectorAll("#quizList .quiz-preview")).map(n => ({
+    name: n.getAttribute("data-quiz"),
+    class: n.getAttribute("data-class"),
+    date: n.getAttribute("data-date"),
+    time: n.getAttribute("data-time"),
+    notes: n.getAttribute("data-notes")
+  }));
+
+  const data = {classes, assignments, quizzes};
+  try{
+    localStorage.setItem("plannerData", JSON.stringify(data));
+  }catch(e){
+    console.error("Failed to save planner data:", e);
+  }
+}
+
+function loadFromLocalStorage(){
+  const raw = localStorage.getItem("plannerData");
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    loadImportedData(data);
+  }catch(e){
+    console.error("Failed to load planner data:", e);
+  }
+}
+
+/* HELPERS */
+function isoDateFromParts(year, monthIndex, day){
+  return `${year}-${String(monthIndex+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+function escapeHtml(s){
+  if(s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function escapeJs(s){
+  if(s === null || s === undefined) return '';
+  return String(s).replace(/'/g,"\\'").replace(/"/g,'\\"');
+}
+
+/* INIT */
+document.addEventListener("DOMContentLoaded", () => {
+  if($("classList") && $("classList").innerHTML.trim() === "") $("classList").innerHTML = "No classes added yet.";
+  if($("assignmentList") && $("assignmentList").innerHTML.trim() === "") $("assignmentList").innerHTML = "No assignments yet.";
+  if($("quizList") && $("quizList").innerHTML.trim() === "") $("quizList").innerHTML = "No quizzes or tests yet.";
+
+  const modal = $("dayModal");
+  if(modal) modal.addEventListener("click", (e) => { if(e.target === modal) closeDayModal(); });
+
+  updateColorPreview();
+  loadFromLocalStorage();
+  renderCalendar();
+  showTab("assignments");
+});
