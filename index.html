@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Student Planner</title>
+  <link rel="stylesheet" href="planner.css">
+</head>
+<body>
+
+<header>
+  <h1>Student Planner</h1>
+</header>
+
+<nav class="nav">
+  <button onclick="showTab('assignments')">Assignments</button>
+  <button onclick="showTab('classes')">Classes</button>
+  <button onclick="showTab('tests')">Tests & Quizzes</button>
+  <button onclick="showTab('calendar')">Calendar</button>
+</nav>
+
+<!-- ASSIGNMENTS TAB -->
+<section id="assignments" class="tab">
+  <div class="panel form-panel">
+    <h2>Add Assignment</h2>
+    <label class="field">
+      <span class="label">Assignment</span>
+      <input id="assignmentName" type="text" placeholder="e.g., Read Chapter 4">
+    </label>
+
+    <label class="field">
+      <span class="label">Class</span>
+      <select id="assignmentClass">
+        <option value="">Select Class</option>
+      </select>
+    </label>
+
+    <div class="row two-up">
+      <label class="field small">
+        <span class="label">Due</span>
+        <input id="assignmentDue" type="date">
+      </label>
+
+      <label class="field small">
+        <span class="label">Time (optional)</span>
+        <input id="assignmentTime" type="time">
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="label">Notes</span>
+      <textarea id="assignmentNotes" placeholder="Short notes (optional)"></textarea>
+    </label>
+
+    <div class="actions">
+      <button class="primary" onclick="addAssignment()">Add</button>
+    </div>
+  </div>
+
+  <div class="panel list-panel">
+    <h3>Assignments</h3>
+    <div id="assignmentList">No assignments yet.</div>
+  </div>
+</section>
+
+<!-- CLASSES TAB -->
+<section id="classes" class="tab">
+  <div class="panel form-panel">
+    <h2>Add Class</h2>
+
+    <label class="field">
+      <span class="label">Class Name</span>
+      <input id="className" type="text" placeholder="e.g., Biology 101">
+    </label>
+
+    <label class="field">
+      <span class="label">Color</span>
+      <select id="classColor" onchange="updateColorPreview()">
+        <option value="#1E90FF">Blue</option>
+        <option value="#FF4500">Red</option>
+        <option value="#FFD700">Gold</option>
+        <option value="#00C853">Green</option>
+        <option value="#000000">Black</option>
+      </select>
+    </label>
+
+    <div class="color-preview" id="colorPreview" aria-hidden="true"></div>
+
+    <div class="row two-up">
+      <label class="field small">
+        <span class="label">Day 1</span>
+        <select id="classDay1">
+          <option value="">Select Day</option>
+          <option value="Mon">Monday</option>
+          <option value="Tue">Tuesday</option>
+          <option value="Wed">Wednesday</option>
+          <option value="Thu">Thursday</option>
+          <option value="Fri">Friday</option>
+          <option value="Online">Online</option>
+        </select>
+      </label>
+
+      <label class="field small">
+        <span class="label">Day 2</span>
+        <select id="classDay2">
+          <option value="">None</option>
+          <option value="Mon">Monday</option>
+          <option value="Tue">Tuesday</option>
+          <option value="Wed">Wednesday</option>
+          <option value="Thu">Thursday</option>
+          <option value="Fri">Friday</option>
+          <option value="Online">Online</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="row two-up">
+      <label class="field small">
+        <span class="label">Start Time</span>
+        <input id="classStart" type="time">
+      </label>
+
+      <label class="field small">
+        <span class="label">End Time</span>
+        <input id="classEnd" type="time">
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="primary" onclick="addClass()">Add Class</button>
+    </div>
+  </div>
+
+  <div class="panel list-panel">
+    <h3>Class List</h3>
+    <div id="classList">No classes added yet.</div>
+  </div>
+</section>
+
+<!-- TESTS & QUIZZES TAB -->
+<section id="tests" class="tab">
+  <div class="panel form-panel">
+    <h2>Add Test / Quiz</h2>
+
+    <label class="field">
+      <span class="label">Name</span>
+      <input id="quizName" type="text" placeholder="e.g., Midterm 1">
+    </label>
+
+    <label class="field">
+      <span class="label">Class</span>
+      <select id="quizClass">
+        <option value="">Select Class</option>
+      </select>
+    </label>
+
+    <div class="row two-up">
+      <label class="field small">
+        <span class="label">Date</span>
+        <input id="quizDate" type="date">
+      </label>
+
+      <label class="field small">
+        <span class="label">Time</span>
+        <input id="quizTime" type="time">
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="label">Notes</span>
+      <textarea id="quizNotes" placeholder="Short notes (optional)"></textarea>
+    </label>
+
+    <div class="actions">
+      <button class="primary" onclick="addQuiz()">Add Quiz/Test</button>
+    </div>
+  </div>
+
+  <div class="panel list-panel">
+    <h3>Quiz/Test List</h3>
+    <div id="quizList">No quizzes or tests yet.</div>
+  </div>
+</section>
+
+<!-- CALENDAR TAB -->
+<section id="calendar" class="tab">
+  <div class="panel calendar-panel">
+    <div class="calendar-header">
+      <button class="nav-btn" onclick="prevMonth()">◀</button>
+      <h2 id="monthLabel" class="month-label">Month Year</h2>
+      <button class="nav-btn" onclick="nextMonth()">▶</button>
+    </div>
+
+    <div class="weekdays">
+      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+
+    <div id="calendarGrid" class="calendar-grid" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- Day modal (shows classes for clicked day) -->
+<div id="dayModal" class="modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header class="modal-header">
+      <h3 id="modalTitle">Events</h3>
+      <button class="close-btn" onclick="closeDayModal()">✕</button>
+    </header>
+    <div id="modalBody" class="modal-body"></div>
+  </div>
+</div>
+
+<script src="planner.js" defer></script>
+</body>
+</html>
